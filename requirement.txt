@@ -1,0 +1,22 @@
+torch
+openai
+zhipuai
+python-dotenv
+langchain_community
+requests
+transformers
+typing
+hashlib
+json
+argparse
+random
+transformer
+langchain_openai
+langchain_huggingface
+pip install -U langchain-community asknews
+pip install langchain langchain_openai langchainhub
+pip install ionic-langchain
+pip install wikipedia
+pip install gpt4all
+pip install wikipedia-api
+pip install faiss-cpu
