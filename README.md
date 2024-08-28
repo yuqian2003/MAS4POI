@@ -114,7 +114,9 @@ If you use this code in your research, please cite the following paper:
   url={https://github.com/yuqian2003/MAS4POI}
 }
 ```
-## Acknowledgments
-The authors thank for Beijing Normal University-Hong Kong Baptist University United International College and the IRADS lab for the provision for computer facility for the conduct of this research.
+# Acknowledgments:
+This research was supported by *Beijing Normal University-Hong Kong Baptist University United International College (UIC)*and the *Intelligent Research and Development Systems (IRADS) lab*. 
+The authors express their gratitude for providing the necessary computational facilities.
+
 
 
