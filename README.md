@@ -115,7 +115,7 @@ If you use this code in your research, please cite the following paper:
 }
 ```
 # Acknowledgments:
-This research was supported by *Beijing Normal University-Hong Kong Baptist University United International College (UIC)*and the *Intelligent Research and Development Systems (IRADS) lab*. 
+This research was supported by *Beijing Normal University-Hong Kong Baptist University United International College (UIC)* and the *Intelligent Research and Development Systems (IRADS) lab*. 
 The authors express their gratitude for providing the necessary computational facilities.
 
 
