@@ -91,6 +91,9 @@ The system has been evaluated on two real-world datasets:
 
 Both datasets are structured under the `data/` directory and organized by user activity levels (e.g., very_active, normal, inactive).
 
+## Case Study
+![Alt text](./images/case_study.png)
+
 ## Citation
 
 If you use this code in your research, please cite the following paper:
