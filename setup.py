@@ -1,0 +1,51 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="MAS4POI",  
+    version="0.1.0", 
+    description="A Multi-Agent System Collaboration for Next POI Recommendation",
+    long_description=open("README.md").read(),  
+    long_description_content_type="text/markdown",  
+    author="yuqian2023",
+    author_email="2212278116@qq.com",
+    url="https://github.com/yuqian2003/MAS4POI",  
+    packages=find_packages(),  
+    install_requires=[  
+        "torch==2.1.0a0+32f93b1",
+        "spacy==3.7.1",
+        "pandas==1.5.3",
+        "openai==1.40.8",
+        "langsmith==0.1.99",
+        "langchain==0.2.14",
+        "langchain-community==0.2.12",
+        "langchain-core==0.2.35",
+        "langchain-huggingface==0.0.3",
+        "langchain-openai==0.1.22",
+        "zhipuai==2.1.4.20230814",
+        "python-dotenv==1.0.1",
+        "requests==2.31.0",
+        "tqdm==4.66.1",
+        "sentence-transformers==3.0.1",
+        "gpt4all==2.8.2",
+        "ionic-langchain==0.2.3",
+        "wikipedia==1.4.0",
+        "wikipedia-api==0.7.1",
+        "urllib3==2.2.2",
+        "faiss-cpu==1.8.0.post1",
+        "transformers==4.44.0",
+    ],
+    extras_require={  
+        'dev': [
+            'pytest>=6.2.5',
+        ],
+        'docs': [
+            'sphinx>=4.0',
+        ],
+    },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires='>=3.7',  
+)
