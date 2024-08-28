@@ -91,6 +91,10 @@ The system has been evaluated on two real-world datasets:
 
 Both datasets are structured under the `data/` directory and organized by user activity levels (e.g., very_active, normal, inactive).
 
+## Main Results
+We compare the performance of six LLMs deployed in our MAS4POI across three datasets, as shown below.
+![Alt text](./images/main.png)
+
 ## Case Study
 ![Alt text](./images/case_study.png)
 
