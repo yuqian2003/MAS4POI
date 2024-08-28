@@ -3,13 +3,6 @@
 
 **MAS4POI** is an innovative multi-agent system (MAS) designed to enhance next Point-of-Interest (POI) recommendation through the collaboration of Large Language Model (LLM)-based agents. Each agent in the system is specialized to handle different aspects of the recommendation process, leveraging the power of LLMs to generate accurate and contextually relevant recommendations. The system has been evaluated on two real-world datasets and integrates six different LLMs to showcase its effectiveness.
 
-## Features
-
-- **Multi-Agent Collaboration:** Specializes LLMs into distinct roles to handle different stages of POI recommendation, such as data processing, recommendation generation, reflection, navigation, and user interaction.
-- **Extensibility:** Supports the integration of various LLMs and external tools, such as Wikipedia and Amap, to extend the system's capabilities beyond POI recommendation, including navigation and real-time Q&A.
-- **Cold Start Problem Mitigation:** Collaborating agents ensure robust performance even with limited user data, effectively addressing the cold start issue.
-- **Real-World Datasets:** Evaluated on two real-world datasets, providing empirical validation of the system's effectiveness.
-
 ## System Architecture
 
 The system is composed of seven specialized agents, each handling different tasks:
@@ -21,6 +14,14 @@ The system is composed of seven specialized agents, each handling different task
 - **Analyst:** Generates POI recommendations by analyzing user trajectory data and identifying trends in user behavior.
 - **UserAgent:** Manages user profiles and interacts with users to gather preferences.
 - **Searcher:** Responds to specific user queries by accessing external data sources.
+
+## Features
+
+- **Multi-Agent Collaboration:** Specializes LLMs into distinct roles to handle different stages of POI recommendation, such as data processing, recommendation generation, reflection, navigation, and user interaction.
+- **Extensibility:** Supports the integration of various LLMs and external tools, such as Wikipedia and Amap, to extend the system's capabilities beyond POI recommendation, including navigation and real-time Q&A.
+- **Cold Start Problem Mitigation:** Collaborating agents ensure robust performance even with limited user data, effectively addressing the cold start issue.
+- **Real-World Datasets:** Evaluated on two real-world datasets, providing empirical validation of the system's effectiveness.
+
 
 ## Installation
 
