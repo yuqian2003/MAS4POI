@@ -2,12 +2,6 @@
 
 **MAS4POI** is an innovative multi-agent system (MAS) designed to enhance next Point-of-Interest (POI) recommendation through the collaboration of Large Language Model (LLM)-based agents. Each agent in the system is specialized to handle different aspects of the recommendation process, leveraging the power of LLMs to generate accurate and contextually relevant recommendations. The system has been evaluated on two real-world datasets and integrates six different LLMs to showcase its effectiveness.
 
-## Abstract
-
-**LLM-based Multi-Agent Systems** have shown significant potential in handling complex decision-making tasks across various domains. However, their application in next POI recommendation remains underexplored. To address this gap, we introduce **MAS4POI**, a novel system designed to enhance next POI recommendations through collaborative multi-agent interactions. MAS4POI leverages LLMs by specializing them into distinct agents, such as `DataAgent`, `Manager`, `Analyst`, and `Navigator`, each contributing to different stages of the recommendation process. These specialized agents work collaboratively to generate next POI recommendations.
-
-Our system has been tested by integrating six different LLMs and evaluated on two real-world datasets, demonstrating its effectiveness in improving recommendation accuracy and mitigating the cold start issue. Additionally, we present practical case studies to showcase the enhanced capabilities of MAS4POI in real-world scenarios.
-
 ## Features
 
 - **Multi-Agent Collaboration:** Specializes LLMs into distinct roles to handle different stages of POI recommendation, such as data processing, recommendation generation, reflection, navigation, and user interaction.
