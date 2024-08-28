@@ -98,6 +98,9 @@ We compare the performance of six LLMs deployed in our MAS4POI across three data
 ## Case Study
 ![Alt text](./images/case_study.png)
 
+## User Cold Start Analysis
+![Alt text](./images/cold.png)
+
 ## Citation
 
 If you use this code in your research, please cite the following paper:
