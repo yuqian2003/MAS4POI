@@ -32,7 +32,7 @@ def setup_logger(log_file):
     return logger
 
 def main():
-    parser = argparse.ArgumentParser(description='Multi Agent system for tourism.')
+    parser = argparse.ArgumentParser(description='MAS4POI: a Multi Agent Collaboration system for Next POI Recommendation.')
     
     # Initial
     parser.add_argument('--key', type=str, default = "YOUR_OPENAI_API_KEY", 
