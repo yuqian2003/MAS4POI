@@ -33,6 +33,7 @@ def setup_logger(log_file):
 
 def main():
     parser = argparse.ArgumentParser(description='Multi Agent system for tourism.')
+    
     # Initial
     parser.add_argument('--key', type=str, default = "YOUR_OPENAI_API_KEY", 
                 help='API key for OpenAI or other LLM providers. This key is used to authenticate requests to the LLM service.')
@@ -48,8 +49,10 @@ def main():
     
     parser.add_argument('--seed', type=int, default=4090, 
                     help='Random seed for reproducibility. This ensures that results are consistent across runs.')
+    
     parser.add_argument('--task', type=str, choices=['poi', 'navigator', 'search'], default='poi', 
             help='The task to execute. Options include "poi" for Point of Interest recommendation, "navigator" for route planning, and "search" for information retrieval.')
+    
     # Reflector
     parser.add_argument('--times',type=int, default=1, 
         help='Number of reflection attempts for error correction. If initial predictions are incorrect, Reflector will try up to this many times to improve the result.')
@@ -69,6 +72,7 @@ def main():
     
     parser.add_argument('--city',type=str, default="珠海",
             help='The city in which navigation will take place. Used to refine geolocation services.')
+    
     # Data Agent
     parser.add_argument('--group', type=str, choices=['very_active','normal','inactive','overall'],
                     default='overall', 
@@ -79,6 +83,7 @@ def main():
     
     parser.add_argument('--case_num', type=int, default=100, 
                 help='Number of cases to process in the workflow. Determines how many test cases will be evaluated.')
+    
     parser.add_argument('--filePath', type=str, default='./data/nyc/raw/NYC_{}.csv',
                 help='Path to the dataset files. This should be the directory containing the raw data files.')
 
@@ -106,6 +111,7 @@ def main():
     
     parser.add_argument('--report_freq', type=int, default=30, 
                 help='Frequency for reporting progress during execution, measured in seconds.')
+    
     args = parser.parse_args()
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
