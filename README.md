@@ -41,43 +41,7 @@ To get started with MAS4POI, follow these steps:
 4. Once the installation is complete, you can run the system using the following command:
      ```bash
      python main.py
-This will execute the main workflow, where you can specify the task (e.g., POI recommendation, navigation, or search) along with other configurations such as the LLM model, dataset, and API keys.
-
-## Project Structure
-The project structure is organized as follows:
-
-MAS4POI/  
-├── agents/                         
-│   ├── Analyst.py  
-│   ├── Data_Agent.py  
-│   ├── Manager.py  
-│   ├── Navigator.py  
-│   ├── Reflector.py  
-│   └── Searcher.py  
-│  
-├── data/                         
-│   ├── nyc/                       
-│   │   ├── raw/  
-│   │   │   ├── inactive/  
-│   │   │   ├── normal/  
-│   │   │   └── very_active/  
-│   │   ├── nyc_train.csv  
-│   │   ├── nyc_test.csv  
-│   │   └── nyc_val.csv  
-│   └── tky/                        
-│       ├── raw/  
-│       │   ├── inactive/  
-│       │   ├── normal/  
-│       │   └── very_active/  
-│       ├── tky_train.csv  
-│       ├── tky_test.csv  
-│       └── tky_val.csv  
-│  
-├── LICENSE                         
-├── README.md                      
-├── main.py                         
-├── requirements.txt                
-└── setup.py                      
+This will execute the main workflow, where you can specify the task (e.g., POI recommendation, navigation, or search) along with other configurations such as the LLM model, dataset, and API keys.                     
                    
 
 ## Datasets
@@ -87,7 +51,7 @@ The system has been evaluated on two real-world datasets:
 - **NYC Dataset:** Contains POI check-in data for New York City.
 - **TKY Dataset:** Contains POI check-in data for Tokyo.
 
-Both datasets are structured under the `data/` directory and organized by user activity levels (e.g., very_active, normal, inactive).
+Both datasets are structured under the `data/` directory and organized by user activity levels (e.g., very_active, normal, inactive) to analyse cold start issue.
 
 ## Main Results
 We compare the performance of six LLMs deployed in our MAS4POI across three datasets, as shown below.
