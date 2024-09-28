@@ -73,6 +73,9 @@ def main():
     parser.add_argument('--city',type=str, default="珠海",
             help='The city in which navigation will take place. Used to refine geolocation services.')
     
+    # Analyst
+    parser.add_argument('--prompt_id', type=str, default='c', choices=['a', 'b', 'c', 'd', 'e'],
+                    help='Analyst different prompt selection.')
     # Data Agent
     parser.add_argument('--group', type=str, choices=['very_active','normal','inactive','overall'],
                     default='overall', 
