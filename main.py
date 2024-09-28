@@ -123,7 +123,11 @@ def main():
 
     # The Agent Initial
     data_agent = DataAgent(filePath=args.filePath, datasetName=args.datasetName, case_num=args.case_num, group=args.group)
-    analyst = Analyst(llm=args.LLM, logger=logger, temperature=args.temperature, key = args.key, base = args.base)
+        analyst = Analyst(llm=args.LLM, 
+                          logger=logger, 
+                          temperature=args.temperature, 
+                          key = args.key, base = args.base, 
+                          self.prompt_id = args.prompt_id)
     if args.task == 'search':
         search_agent = SearcherAgent(
                 question=args.question,
