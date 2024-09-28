@@ -130,7 +130,7 @@ def main():
                           logger=logger, 
                           temperature=args.temperature, 
                           key = args.key, base = args.base, 
-                          self.prompt_id = args.prompt_id)
+                          prompt_id = args.prompt_id)
     if args.task == 'search':
         search_agent = SearcherAgent(
                 question=args.question,
