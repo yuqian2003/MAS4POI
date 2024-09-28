@@ -220,7 +220,21 @@ Please organize your answer in a JSON object containing following keys:
         except Exception as e:
             self.logger.error(f"Error calling LLM API: {e}")
             return []
-
+    
+    def get_output_path(self, trajectory: str) -> str:
+        """
+        Constructs the output path for saving the response based on the trajectory ID.
+    
+        Args:
+            trajectory (str): The trajectory ID.
+    
+        Returns:
+            str: The full file path for saving the response.
+        """
+        output_directory = '../reflector_output'  
+        os.makedirs(output_directory, exist_ok=True) 
+        return os.path.join(output_directory, f'response_{trajectory}.json')
+        
     def save_response(self, response: Dict, trajectory: str) -> None:
         """
         Saves the response to a JSON file in the output directory.
