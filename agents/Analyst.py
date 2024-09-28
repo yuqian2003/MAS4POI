@@ -14,7 +14,7 @@ class Analyst:
     to predict the next POI a user is likely to visit based on trajectory history.
     """
 
-    def __init__(self, llm: str, logger: logging.Logger, temperature: float, key: str, base: str) -> None:
+        def __init__(self, llm: str, logger: logging.Logger, temperature: float, prompt_id: str, key: str, base: str) -> None:
         self.logger = logger
         self.llm = self.set_llm(llm)
         self.temperature = temperature
