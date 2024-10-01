@@ -201,7 +201,7 @@ class ManageAgent:
         try:
             seed_value = eval(trajectory)
             random.seed(seed_value)
-            negSample = random.sample(data["poiList"], self.case_num)
+            negSample = random.sample(data["poiList"], 100)
             candidateSet = negSample + [groundTruth[0]]
             return candidateSet
         except Exception as e:
