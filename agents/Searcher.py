@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from transformers.pipelines import SummarizationPipeline
 from langchain_community.tools import YouTubeSearchTool
-from langchain_community.tools.asknews import AskNewsSearch
+# from langchain_community.tools.asknews import AskNewsSearch
 from langchain_community.document_loaders import WebBaseLoader
 from typing import List, Dict, Union, Any, Tuple, Optional
 from langchain.tools.retriever import create_retriever_tool
@@ -182,11 +182,11 @@ class SearcherAgent:
             print("Weather Tool cannot be initialized:", e)
 
         # Initialize AskNews Search Tool
-        try:
-            asknews_tool = AskNewsSearch(max_results)
-            tools.append(asknews_tool)
-        except Exception as e:
-            print("AskNews Tool cannot be initialized:", e)
+        # try:
+        #     asknews_tool = AskNewsSearch(max_results)
+        #     tools.append(asknews_tool)
+        # except Exception as e:
+        #     print("AskNews Tool cannot be initialized:", e)
 
         return tools
     
