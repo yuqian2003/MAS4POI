@@ -356,10 +356,3 @@ class DataAgent:
         else:
             print(f"User ID {user_id} does not exist in the data.")
             return False
-
-
-
-
-
-
-
