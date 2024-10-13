@@ -1,10 +1,11 @@
 import random
+import json
 import logging
 from tqdm import tqdm
+from collections import defaultdict
 from agents.Navigator import NaviAgent
-from typing import List, Dict, Union, Any, Tuple
+from typing import List, Dict, Union, Any, Tuple, Optional
 from agents.Reflector import ReflectorAgent
-
 
 class ManageAgent:
     def __init__(self, data_agent, analyst, search_agent, navi_agent, 
@@ -43,7 +44,7 @@ class ManageAgent:
 
         # Reflector
         self.times = times
-
+        
         # Data Agent
         self.datasetName = datasetName
         
@@ -125,42 +126,97 @@ class ManageAgent:
         """
         try:
             self.logger.info("Starting POI recommendation workflow...")
-            data = self.data_agent.process()
+            data = self.data_agent.process()   # 在此处通过data agent获取数据
+            """
+            return {
+                "longs": longs,
+                "recents": recents,
+                "targets": targets,
+                "poiInfos": poiInfos,
+                "traj2u": traj2u,
+                "poiList": list(poiInfos.keys())
+            }
+            """
             self.logger.info("Data loaded successfully through Data Agent.")
             
             hit1, hit5, hit10, rr = 0, 0, 0, 0
             err = []
+            err_cat = []
             reflector_agent = ReflectorAgent(llm=self.llm, logger=self.logger, times=self.times, 
                                              datasetName=self.datasetName, seed=self.seed, 
-                                             key=self.key, base=self.base)
+                                             key=self.key, base=self.base, temperature = 0.)
             self.logger.info("Reflector agent initialized.")
 
             for trajectory, groundTruth in tqdm(data["targets"].items()):
                 self.logger.info(f'Processing trajectory: {trajectory}')
-                candidateSet = self.generate_candidate_set(trajectory, groundTruth, data)
-
+                candidateSet = self.generate_candidate_set(trajectory, groundTruth, data)  # candidate set, data comes from Data agent
+                attempt = 0
                 try:
-                    prediction = self.analyst.generate_recommendation(
+                    prediction, longterm, recent, candidates = self.analyst.generate_recommendation(
                         trajectory, candidateSet, groundTruth,
                         data["longs"], data["recents"], data["traj2u"], data["poiInfos"]
                     )
-                    correct = self.process_prediction(trajectory, groundTruth, prediction, reflector_agent, candidateSet, data)
+
+                    u = data["traj2u"].get(trajectory) # traj2u --> user id
+                    long = data["longs"].get(u, [])  # longs
+                    rec = data["recents"].get(trajectory, []) # recents
+                    time = rec[-1][1]
+                    
+                    # reflector input
+                    input_data = {"longterm": longterm, "recent": recent, "candidates": candidates, 
+                                  "trajectory": trajectory, "time": time, "u": u}
+                    # process_prediction input --> 
+                    """
+                    Your task is to recommend a user's next point-of-interest (POI) from <candidate set> based 
+                    on his/her trajectory information.
+                    <question> The following is a trajectory of user {user_id}: {recent}. \
+                    There is also historical data: {longterm}. Given the data, at {time}, which POI id \
+                    will user {user_id} visit? Note that POI id is an identifier in the set of POIs. \
+                    <answer>: At {time}, user {u} will visit POI id {poi_id}.
+                    """
+                    correct = self.process_prediction(trajectory, groundTruth, prediction, reflector_agent, input_data, attempt)
+                    
+                    
+                    pre_cat = data["poiInfos"].get(prediction[0], {}).get("category", "Unknown")
+                    true_cat = data["poiInfos"].get(groundTruth[0], {}).get("category", "Unknown")
+                    
                     
                     if correct:
                         hit1, hit5, hit10, rr = self.update_metrics(hit1, hit5, hit10, rr, prediction, groundTruth)
                     else:
                         err.append((trajectory, groundTruth, candidateSet, data["longs"], data["recents"], data["traj2u"], data["poiInfos"]))
-                        self.logger.error(f'Failed to correct prediction for trajectory {trajectory} after {self.times} attempts.')
-
+                        err_cat.append({"pre":pre_cat,
+                                       "true_Cat":true_cat,
+                                       "info":data["poiInfos"]})
+                        self.logger.error(f'Failed to correct prediction for trajectory {trajectory} after {attempt + 1} attempts.')
+                            
                 except Exception as e:
                     self.logger.error(f'Error encountered for trajectory {trajectory}: {repr(e)}')
                 self.logger.info('-' * 100)
-
+            
+            self.save_errors_to_file(err_cat, output_path='poi_errors.json') # categorical statistic
             return self.finalize_poi_workflow(reflector_agent, hit1, hit5, hit10, rr, len(data["targets"]), err)
 
         except Exception as e:
             self.logger.error(f"Error in POI workflow: {e}")
             return 0.0, 0.0, 0.0, 0.0
+
+    def save_errors_to_file(self, err: List[Dict], output_path: str = 'poi_errors.json') -> None:
+        """
+        Saves the list of errors to a JSON file for further analysis.
+        
+        Args:
+        - err: A list of error details, each being a dictionary containing information about the error.
+        - output_path: The path where the JSON file will be saved.
+        """
+        print(err)
+        self.logger.info(f"Attempting to save errors to {output_path}")
+        try:
+            with open(output_path, 'w') as file:
+                json.dump(err, file, indent=4, ensure_ascii=False)
+            self.logger.info(f"Errors saved to {output_path}")
+        except Exception as e:
+            self.logger.error(f"Error saving errors to file: {e}")
 
     def run_navigator_workflow(self) -> None:
         """
@@ -201,7 +257,7 @@ class ManageAgent:
         try:
             seed_value = eval(trajectory)
             random.seed(seed_value)
-            negSample = random.sample(data["poiList"], 100)
+            negSample = random.sample(data["poiList"], 100)  ############  在这里生成随机的100个sample, data 源于data agent
             candidateSet = negSample + [groundTruth[0]]
             return candidateSet
         except Exception as e:
@@ -209,16 +265,15 @@ class ManageAgent:
             return []
 
     def process_prediction(self, trajectory: str, groundTruth: tuple, prediction: list, 
-                           reflector_agent, candidateSet: list, data: dict) -> bool:
+                           reflector_agent, input_data: dict, attempt: int) -> bool:
         """
-        Processes the prediction and applies reflection if needed.
+        Processes the prediction and applies reflection if needed.  the prediction comes from Analyst
 
         Parameters:
         - trajectory (str): The trajectory ID.
         - groundTruth (tuple): The ground truth POI for the trajectory.
-        - prediction (list): The predicted POIs.
+        - prediction (list): The predicted POIs.  comes from analyst
         - reflector_agent: The agent responsible for reflection.
-        - candidateSet (list): The set of candidate POIs.
         - data (dict): The dataset containing POIs and trajectory information.
 
         Returns:
@@ -227,18 +282,23 @@ class ManageAgent:
         try:
             correct = groundTruth[0] in prediction
             if correct:
-                index = prediction.index(groundTruth[0]) + 1
+                index = prediction.index(groundTruth[0]) + 1  # idx
                 self.logger.info(f'Correct prediction at position {index}')
             else:
+                # reflector
                 self.logger.warning(f'Initial prediction failed for trajectory {trajectory}')
-                correct = self.apply_reflection(trajectory, reflector_agent, candidateSet, groundTruth, correct)
+                while not correct and attempt < self.times:
+                    #  scratchpad --> analyst wrong answer
+                    self.logger.info(f'Attempt {attempt + 1}: Reflector agent processing...')
+                    correct = self.apply_reflection(groundTruth, reflector_agent, input_data, prediction, correct, attempt)
+                    attempt += 1  # Increment attempt count after each reflection
             return correct
         except Exception as e:
             self.logger.error(f"Error processing prediction: {e}")
             return False
 
-    def apply_reflection(self, trajectory: str, reflector_agent, candidateSet: list, 
-                         groundTruth: tuple, correct: bool) -> bool:
+    def apply_reflection(self, groundTruth, reflector_agent, input_data, 
+                         scratchpad, correct, attempt) -> bool:
         """
         Applies reflection to correct a failed prediction.
 
@@ -248,18 +308,54 @@ class ManageAgent:
         - candidateSet (list): The set of candidate POIs.
         - groundTruth (tuple): The ground truth POI for the trajectory.
         - correct (bool): Whether the initial prediction was correct or not.
-
+        - attempt int --> record the reflect iteration
         Returns:
         - bool: Whether the prediction was corrected after reflection or not.
         """
         try:
-            for i in range(self.times):
-                self.logger.info(f'Attempt {i + 1}: Reflector agent processing...')
-                prediction = reflector_agent.forward(trajectory, candidateSet, correct)
-                correct = groundTruth[0] in prediction
-                if correct:
-                    self.logger.info('Corrected by reflector agent.')
-                    break
+            # for i in range(self.times):       not Loop
+            
+            # input data --> 
+            # self.logger.info(f"Input Data: {input_data}")
+            # self.logger.info(f"Scratchpad: {scratchpad}")
+            # self.logger.info(f"Correct Flag: {correct}")
+            
+            
+            # for key, value in input_data.items():
+            #     if isinstance(value, str) and value.startswith("0") and len(value) > 1:
+            #         raise ValueError(f"Invalid input data: {key} cannot start with a leading zero.")
+            # list' object has no attribute 'items' clean_scratchpad
+            
+            
+            # scratchpad = self.clean_scratchpad(scratchpad)
+            # self.logger.info(f"****************************************************{input_data}")
+            self.logger.info(f"*********************************************************************aaaaaaaaaaaaaaaaaaaaaa")
+            # self.logger.info(scratchpad)
+            ###### call the reflector agent
+            
+            # prediction = reflector_agent.forward(input_data, scratchpad, correct) 
+            # self.logger.info(f"********************************************************************bbbbbbbbbbbbbbbbbbbbbbb")
+            ##  try to divide
+            reflection = reflector_agent.analyze_error(input_data, scratchpad)
+            self.logger.info(f'Reflection Content: {reflection}')
+            self.logger.info(f"********************************************************************bbbbbbbbbbbbbbbbbbbbbbb")
+            modified_prediction = reflector_agent.modify_based_on_reflection(input_data, reflection, scratchpad)
+            self.logger.info(f'This is {attempt} REFINE: {modified_prediction}')
+            self.logger.info(f"********************************************************************ccccccccccccccccccccccc")
+            # self.attempt += 1 
+            # only affect the reflector agent attribute
+            # self.logger.info(f"************* {}prediction")
+            # output by forward function in reflector agent --- > modified_prediction
+            # self.logger.info(prediction)
+            if not modified_prediction:
+                self.logger.error("Received invalid modified_prediction from reflection process.")
+                return False
+                
+            correct = groundTruth[0] in modified_prediction
+            if correct:
+                self.logger.info('Corrected by reflector agent.')
+            else:
+                self.logger.info(f'Attempt {attempt + 1} failed, trying again...')
             return correct
         except Exception as e:
             self.logger.error(f"Error applying reflection: {e}")
@@ -293,7 +389,14 @@ class ManageAgent:
         except Exception as e:
             self.logger.error(f"Error updating metrics: {e}")
             return hit1, hit5, hit10, rr
-
+    def clean_scratchpad(self, scratchpad):
+        cleaned_list = []
+        for entry in scratchpad:
+            if isinstance(entry, str) and entry.startswith("0") and len(entry) > 1:
+                cleaned_list.append(entry.lstrip("0"))  
+            else:
+                cleaned_list.append(entry)  
+        return cleaned_list
     def finalize_poi_workflow(self, reflector_agent, hit1: int, hit5: int, hit10: int, 
                               rr: float, num_trajectories: int, err: list) -> Tuple[float, float, float, float]:
         """
@@ -312,15 +415,25 @@ class ManageAgent:
         - Tuple[float, float, float, float]: Final accuracy metrics (ACC@1, ACC@5, ACC@10, MRR).
         """
         try:
-            reflector_agent.output_memory()
-            reflector_agent.clear_memory()
-
+            # Obiect of type set is not JSON serializable
+            self.logger.info(f"The hit1 is:{hit1}")
+            self.logger.info(f"The hit5 is:{hit5}")
+            self.logger.info(f"The hit10 is:{hit10}")
+            self.logger.info(f"The rr is:{rr}")
+            self.logger.info(f"The num_trajectories is:{num_trajectories}")
+            reflector_memory = reflector_agent.output_memory()
+            self.logger.info(f"The reflector_memory is:{reflector_agent.output_memory()}")
             acc1 = hit1 / num_trajectories
             acc5 = hit5 / num_trajectories
             acc10 = hit10 / num_trajectories
             mrr = rr / num_trajectories
 
             self.logger.info(f"Workflow completed. ACC@1: {acc1:.4f}, ACC@5: {acc5:.4f}, ACC@10: {acc10:.4f}, MRR: {mrr:.4f}")
+            # if isinstance(reflector_memory, set):
+            #     reflector_memory = list(reflector_memory)
+            # reflector_agent.output_memory()
+            # reflector_agent.clear_memory()
+
             return acc1, acc5, acc10, mrr
         except Exception as e:
             self.logger.error(f"Error finalizing POI workflow: {e}")
