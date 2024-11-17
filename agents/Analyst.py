@@ -22,7 +22,10 @@ class Analyst:
         # OPENAI
         self.key = key
         self.base = base
-
+        
+        # prompt comparation
+        self.prompt_id = prompt_id
+    
     def set_llm(self, llm_name: str) -> str:
         """
         Sets the LLM model based on the provided name and logs the model setup process.
@@ -91,11 +94,30 @@ class Analyst:
             mostrec = rec[-1][0]
             longterm = [(poi, poiInfos[poi]["category"]) for poi, _ in long][-40:]
             recent = [(poi, poiInfos[poi]["category"]) for poi, _ in rec][-5:]
+            
             candidates = self.create_candidates(mostrec, candidateSet, poiInfos)
-
-            prompt = self.create_prompt(longterm, recent, candidates)
+            poi_id = candidates[0][0]  
+            user_id = u  
+            id_range = len(poiInfos)
+            time = rec[-1][1] 
+            if self.prompt_id == 'a':
+                prompt = self.create_prompt_a(user_id, trajectory, candidateSet, longterm, recent, time)
+            elif self.prompt_id == 'b':
+                prompt = self.create_prompt_b(user_id, trajectory, candidateSet, longterm, recent, time)
+            elif self.prompt_id == 'c':
+                prompt = self.create_prompt_c(user_id, trajectory, poi_id, id_range, time, recent, longterm)
+            elif self.prompt_id == 'd':
+                prompt = self.create_prompt_d(longterm, recent, candidates)
+            elif self.prompt_id == 'e':
+                prompt = self.create_prompt_e(user_id, trajectory, candidateSet, longterm, recent, time)
+            else:
+                self.logger.error(f"Unknown prompt_id: {self.prompt_id}")
+                return [] 
+            # self.logger.info(f"Generated prompt for trajectory {trajectory}: {prompt}")
             prediction = self.call_llm_api(prompt)
-
+            if not prediction:
+                self.logger.warning(f"Prediction is empty for trajectory {trajectory}")
+            # prediction = self.call_llm_api(prompt)
             output = self.create_output_data(prompt, prediction, groundTruth)
             self.save_response(output, trajectory)
             self.logger.info(f'This is the prediction by ANALYST: {prediction}')
@@ -150,14 +172,128 @@ class Analyst:
         except Exception as e:
             self.logger.error(f"Error creating candidate POIs: {e}")
             return []
+    def create_prompt_a(
+        self, 
+        user_id: str, 
+        trajectory_id: str, 
+        candidateSet: List[Tuple[str, Optional[float], str]],  # Including distance and category
+        longterm: List[Tuple[str, str]],  
+        recent: List[Tuple[str, str]],    
+        time: str
+    ) -> str:
+        """
+        Creates a Chain-of-Thought based prompt for the LLM to recommend the next POI based on
+        trajectory history, recent and long-term patterns, and candidate POIs.
+        """
+        try:
+            prompt = f"""\
+    Consider the following problem of predicting the next point-of-interest (POI) a user might visit, let’s
+think step-by-step:
+    
+    1. **User's Long-Term Behavior**: The user has shown a long-term preference for certain categories of places. These are their long-term check-ins, formatted as (POIID, Category):
+        {longterm}.
+        Based on this, think about what types of places the user tends to revisit frequently.
+    
+    2. **User's Recent Behavior**: Recently, the user has been visiting the following places. These are their recent check-ins, formatted as (POIID, Category):
+        {recent}.
+        Think about the user's short-term preferences and recent trends in behavior. Are they switching between categories? Is there a pattern to their visits?
+    
+    3. **Distance Consideration**: Now, consider the candidate POIs that are nearby. These are the candidate POIs, formatted as (POIID, Distance, Category):
+        {candidateSet}.
+        Think about whether the user is likely to prefer a nearby location, and how the distance might affect their decision.
+    
+    4. **Sequential Reasoning**: Based on the user's long-term and recent behavior, combined with the distances to candidate POIs, predict the most likely POI the user will visit next. Explain why the user is likely to visit this POI next, considering their preferences and proximity.
+    
+    Please respond in a valid JSON format containing only the keys: 'recommendation' and 'reason'.
+    - "recommendation": A list of the 10 most likely probable POIs (POIIDs) the user might visit next, in descending order of probability.
+    - "reason": A step-by-step explanation of your reasoning, covering long-term preferences, recent preferences, and distance.
+    """
+            return prompt
+        except Exception as e:
+            self.logger.error(f"Error creating Chain-of-Thought prompt: {e}")
+            return ""
 
-    def create_prompt(
+    def create_prompt_b(
+        self, 
+        user_id: str, 
+        trajectory_id: str, 
+        candidateSet: List[Tuple[str, Optional[float], str]],  
+        longterm: List[Tuple[str, str]],  
+        recent: List[Tuple[str, str]],    
+        time: str
+    ) -> str:
+        """
+        Creates a Plan-and-Solve-based prompt for the LLM to recommend the next POI based on
+        trajectory history, recent and long-term patterns, and candidate POIs.
+        """
+        try:
+            prompt = f"""\
+        Q: Consider the problem of predicting the next point-of-interest (POI) a user might visit. First, let’s devise a plan to solve this problem.
+    
+        Plan:
+        1. **Identify Long-Term Behavior**: The user has shown a preference for certain types of places over time. These are their long-term check-ins, formatted as (POIID, Category):
+            {longterm}.
+        We will analyze these to identify patterns in the user's long-term behavior.
+    
+        2. **Analyze Recent Behavior**: The user has visited the following places recently, formatted as (POIID, Category):
+            {recent}.
+        We will analyze whether the user's short-term preferences align with or differ from their long-term behavior.
+    
+        3. **Distance and Proximity Consideration**: Here are the candidate POIs that are nearby, formatted as (POIID, Distance, Category):
+            {candidateSet}.
+        We will consider the impact of distance on the user's next visit, as users typically prefer closer POIs.
+    
+        Let's pay special attention to relevant variables, such as POI categories and distances, to ensure we account for all important factors. Calculate intermediate results where necessary, and extract relevant variables and numbers.
+    
+        Now, let's carry out the plan and predict the next POI the user is likely to visit, step by step.
+        Please respond in a valid JSON format containing only the keys: 'recommendation' and 'reason'.
+        - "recommendation": A list of the 10 most likely probable POIs (POIIDs) the user might visit next, in descending order of probability.
+        - "reason": A step-by-step explanation of your reasoning, covering long-term preferences, recent preferences, and distance.
+  
+        """
+            return prompt
+        except Exception as e:
+            self.logger.error(f"Error creating Plan-and-Solve prompt: {e}")
+            return ""
+
+ 
+    def create_prompt_c(
+        self, 
+        user_id: str, 
+        trajectory_id: str, 
+        poi_id: str, 
+        id_range: int, 
+        time: str, 
+        recent: List[Tuple[str, str]], 
+        longterm: List[Tuple[str, str]]
+    ) -> str:
+        """
+        Creates a prompt for the LLM for prompt ID 'c' based on the provided data and trajectory ID.
+        """
+        try:
+            prompt = f"""\
+    Your task is to recommend a user's next point-of-interest (POI) from <candidate set> based on his/her trajectory information.
+    <question> The following is a trajectory of user {user_id}: {recent}. \
+    There is also historical data: {longterm}. Given the data, at {time}, which POI id \
+    will user {user_id} visit? Note that POI id is an identifier in the set of POIs. \
+    <answer>: At {time}, user {user_id} will visit POI id {poi_id}.
+    Please organize your answer in a JSON object containing the following keys:
+    - "recommendation": a list of 10 most likely distinct POIIDs from the candidate set, in descending order of probability.
+    """
+            return prompt
+        except Exception as e:
+            self.logger.error(f"Error creating prompt for prompt_id 'c': {e}")
+            return ""
+
+
+    def create_prompt_d(
         self, 
         longterm: List[Tuple[str, str]], 
         recent: List[Tuple[str, str]], 
         candidates: List[Tuple[str, Optional[float], str]]
     ) -> str:
         """
+        input --> longterm / recent / candidates   
         Creates a prompt for the LLM based on the user's check-in history and candidate POIs.
         """
         try:
@@ -176,20 +312,63 @@ Requirements:
 4. Consider which "Category" the user would go next for long-term check-ins indicates sequential transitions the user prefer.
 
 Please organize your answer in a JSON object containing following keys:
-"recommendation" (10 distinct POIIDs of the ten most probable places in <candidate set> in descending order of probability), and "reason" (a concise explanation that supports your recommendation according to the requirements). Do not include line breaks in your output.
+"recommendation" (10 distinct POIIDs of the ten high probable places in <candidate set> in descending order of probability), and "reason" (a concise explanation that supports your recommendation according to the requirements). Do not include line breaks in your output.
 """
             return prompt
         except Exception as e:
             self.logger.error(f"Error creating prompt: {e}")
             return ""
 
+    def create_prompt_e(
+            self, 
+            user_id: str, 
+            trajectory_id: str, 
+            candidateSet: List[Tuple[str, Optional[float], str]],  # Including distance and category
+            longterm: List[Tuple[str, str]],  # Long-term check-ins
+            recent: List[Tuple[str, str]],    # Recent check-ins
+            time: str
+        ) -> str:
+            """
+            input --> longterm / recent / candidates   
+            Creates a prompt for the LLM based on the user's check-in history and candidate POIs.
+            """
+            try:
+                prompt = f"""\
+            Consider the following problem of predicting the next point-of-interest (POI) a user might visit, and think through multiple reasoning paths step-by-step:
+            
+            1. **User's Long-Term Behavior**: The user has shown a long-term preference for certain categories of places. These are their long-term check-ins, formatted as (POIID, Category):
+                {longterm}.
+                Based on this, generate multiple hypotheses about the types of places the user tends to revisit frequently.
+            
+            2. **User's Recent Behavior**: Recently, the user has been visiting the following places. These are their recent check-ins, formatted as (POIID, Category):
+                {recent}.
+                Generate multiple interpretations of the user's short-term preferences and recent trends in behavior. Are they switching between categories? Is there a pattern to their visits?
+            
+            3. **Distance Consideration**: Now, consider the candidate POIs that are nearby. These are the candidate POIs, formatted as (POIID, Distance, Category):
+                {candidateSet}.
+                Generate different hypotheses on how the user is likely to prioritize nearby locations based on distance and how the distance might affect their decision.
+            
+            4. **Sequential Reasoning**: Based on the user's long-term and recent behavior, combined with the distances to candidate POIs, predict the most likely POI the user will visit next by sampling different reasoning paths. Explain the rationale for each path, considering their preferences and proximity.
+            
+            Pay More Attention! After generating multiple reasoning paths, choose the most consistent prediction across them based on a voting mechanism.
+        
+            Please respond in a valid JSON format containing only the keys: 'recommendation' and 'reason'.
+            - "recommendation": A list of the 10 most likely probable POIs (POIIDs) the user might visit next, in descending order of probability.
+            - "reason": A step-by-step explanation of your reasoning, covering long-term preferences, recent preferences, distance, and consistency of the reasoning paths.
+            """
+                return prompt
+            except Exception as e:
+                self.logger.error(f"Error creating prompt: {e}")
+                return ""
+
+    
     def call_llm_api(self, prompt: str) -> List[str]:
         """
         Calls the appropriate LLM API with the provided prompt and returns the recommendation.
-
+    
         Args:
             prompt (str): The prompt to be sent to the LLM API.
-
+    
         Returns:
             List[str]: A list of recommended POI IDs.
         """
@@ -197,30 +376,47 @@ Please organize your answer in a JSON object containing following keys:
             messages = [{"role": "user", "content": prompt}]
             if self.llm == 'gpt':
                 client = OpenAI(
-                    api_key = self.key,
-                    base_url = self.base
+                    api_key=self.key,
+                    base_url=self.base
                 )
                 response = client.chat.completions.create(model='gpt-3.5-turbo', messages=messages, temperature=self.temperature)
             elif self.llm == 'gemini':
                 client = OpenAI(api_key=self.key)
                 response = client.chat.completions.create(model='gemini-pro', messages=messages, temperature=self.temperature)
             elif self.llm == 'moonshot':
-                client = OpenAI(api_key=self.key)
+                client = OpenAI(
+                    api_key=self.key,
+                    base_url=self.base
+                )
                 response = client.chat.completions.create(model='moonshot-v1-8k', messages=messages, temperature=self.temperature)
             elif self.llm == 'qwen':
-                client = OpenAI(api_key=self.key)
+                client = OpenAI(
+                    api_key=self.key,
+                    base_url=self.base
+                )
                 response = client.chat.completions.create(model='qwen-turbo', messages=messages, temperature=self.temperature)
             elif self.llm == 'claude':
                 client = OpenAI(api_key=self.key)
                 response = client.chat.completions.create(model='claude-3-5-sonnet-20240620', messages=messages, temperature=self.temperature)
             else:
                 raise ValueError(f"Unsupported LLM model: {self.llm}")
-
-            return eval(response.choices[0].message.content)["recommendation"]
+    
+            content = response.choices[0].message.content
+            try:
+                # Ensure the content is valid and contains the "recommendation" key
+                result = eval(content)
+                if isinstance(result, dict) and "recommendation" in result:
+                    return result["recommendation"]
+                else:
+                    self.logger.warning("No 'recommendation' key in LLM response.")
+                    return []
+            except Exception as e:
+                self.logger.error(f"Failed to parse LLM response: {e}")
+                return []
         except Exception as e:
             self.logger.error(f"Error calling LLM API: {e}")
             return []
-    
+
     def get_output_path(self, trajectory: str) -> str:
         """
         Constructs the output path for saving the response based on the trajectory ID.
@@ -234,7 +430,7 @@ Please organize your answer in a JSON object containing following keys:
         output_directory = '../reflector_output'  
         os.makedirs(output_directory, exist_ok=True) 
         return os.path.join(output_directory, f'response_{trajectory}.json')
-        
+    
     def save_response(self, response: Dict, trajectory: str) -> None:
         """
         Saves the response to a JSON file in the output directory.
