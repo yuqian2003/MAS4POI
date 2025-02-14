@@ -2,10 +2,10 @@ torch==2.1.0a0+32f93b1
 spacy==3.7.1                          
 pandas==1.5.3                         
 openai==1.40.8                        
-langsmith==0.1.99                     
-langchain==0.2.14                     
-langchain-community==0.2.12           
-langchain-core==0.2.35                
+langsmith==0.1.125                     
+langchain==0.1.20                     
+langchain-community==0.0.38           
+langchain-core==0.2.41                
 langchain-huggingface==0.0.3          
 langchain-openai==0.1.22              
 zhipuai==2.1.4.20230814               
@@ -19,5 +19,4 @@ wikipedia==1.4.0
 wikipedia-api==0.7.1                  
 urllib3==2.2.2                        
 faiss-cpu==1.8.0.post1                
-transformers==4.44.0                  
-# pip install pyowm==3.3.0           
+transformers==4.44.0                            
