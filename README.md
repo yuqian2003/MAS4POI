@@ -45,13 +45,14 @@ This will execute the main workflow, where you can specify the task (e.g., POI r
                    
 
 ## Datasets
-
+![Alt text](./images/dataset.png)
 The system has been evaluated on two real-world datasets:
 
 - **NYC Dataset:** Contains POI check-in data for New York City.
 - **TKY Dataset:** Contains POI check-in data for Tokyo.
 
 Both datasets are structured under the `data/` directory and organized by user activity levels (e.g., very_active, normal, inactive) to analyse cold start issue.
+
 
 ## Main Results
 We compare the performance of six LLMs deployed in our MAS4POI across three datasets, as shown below.
