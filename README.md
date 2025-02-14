@@ -45,7 +45,7 @@ This will execute the main workflow, where you can specify the task (e.g., POI r
                    
 
 ## Datasets
-![Alt text](./images/dataset.png)
+![Alt text](./images/data.png)
 The system has been evaluated on two real-world datasets:
 
 - **NYC Dataset:** Contains POI check-in data for New York City.
