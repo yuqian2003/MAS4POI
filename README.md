@@ -69,12 +69,13 @@ We compare the performance of six LLMs deployed in our MAS4POI across three data
 If you use this code in your research, please cite the following paper:
 
 ```bibtex
-@article{MAS4POI2024,
-  title={MAS4POI: A Multi-Agent System Collaboration for Next POI Recommendation},
-  author={Yuqian Wu, Yuhong Peng, Raymond S.T. Lee},
-  journal={Journal Name},
-  year={2024},
-  url={https://github.com/yuqian2003/MAS4POI}
+@inproceedings{wu2025mas4poi,
+  title={Mas4poi: a multi-agents collaboration system for next poi recommendation},
+  author={Wu, Yuqian and Peng, Yuhong and Yu, Jiapeng and Lee, Raymond},
+  booktitle={Pacific-Asia Conference on Knowledge Discovery and Data Mining},
+  pages={356--367},
+  year={2025},
+  organization={Springer}
 }
 ```
 # Acknowledgments:
